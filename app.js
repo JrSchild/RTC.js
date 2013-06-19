@@ -40,10 +40,9 @@ var speakers = new Array();
 /**
 * When a user connects
 */
-io.sockets.on('connection', function (client) {
+io.on('connection', function (client) {
 	client.emit('connectOk', client.id);
 	
-
 	//-- Variables declarations--//
 	var guest = false;
 	var room = '';
