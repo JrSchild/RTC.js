@@ -1,0 +1,96 @@
+
+
+/* ==========================================================================
+   Author's custom styles
+   ========================================================================== */
+
+
+.header-img {
+	height: 125px;
+	background: url('../img/header.jpg') top left no-repeat;
+}
+
+.blocks {
+	min-height: 0px !important; /* weird overwrite-bug */
+	background: url('../img/blokken.png') top left no-repeat;
+	background-size: 100% 100%;
+}
+
+.header-blocks {
+	height: 15px;
+}
+
+.footer-blocks {
+	height: 8px;
+	opacity: 0.50;
+}
+
+.navbar-inner {
+  background-color: #F0F1F4;
+  background-image: none;
+  -webkit-border-radius: 0px;
+     -moz-border-radius: 0px;
+          border-radius: 0px;
+  border-top-width: 0px;
+}
+
+.navbar {
+  height: 30px;
+}
+
+.navbar .nav {
+	float: right;
+}
+
+.logo {
+	width: 170px;
+	float: left;
+	margin-left: 20px;
+}
+
+.block-sidebar {
+	width: 90%;
+}
+
+.block-sidebar h4 {
+	width: 100%;
+	border-left: 5px solid transparent;
+	font-size: 18px;
+	max-height: 20px;
+	text-transform: uppercase;
+	font-family: sans-serif;
+	font-weight: 700;
+	line-height: 1.2em;
+	margin-bottom: 10px;
+	padding: 7px 10px;
+}
+
+.block-sidebar h4.red {
+	color: #ED1C24;
+	background-color: #FCDAD5;
+	border-left-color: #FFC2C5;
+}
+
+.block-sidebar h4.green {
+	color: #8DC63F;
+	background-color: #EEF6DB;
+	border-left-color: #DFEFBE;
+}
+
+.block-sidebar h4.yellow {
+	color: #FACC10;
+	background-color: #FEF5D1;
+	border-left-color: #FCE5B0;
+}
+
+.block-sidebar h4.orange {
+	color: #F26C25;
+	background-color: #FFE8D7;
+	border-left-color: #FFD5B6;
+}
+
+.block-sidebar h4.skyblue {
+	color: #1A82C5;
+	background-color: #E8F7FC;
+	border-left-color: #D7F0F9;
+}
