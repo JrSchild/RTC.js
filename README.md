@@ -30,3 +30,6 @@ When the function onRemoteStreamAdded is fired the parameters passed are 1) stre
 ### Demo
 The current demo will be rewritten as soon as the RTC.js codebase has been rewritten. For now you can test it by first starting up app.js on your node server. Then go localhost:8889 and give your browser camera-access permissions.
 After that go to localhost:8889/#join, after accepting the camera you will have a one on one connection. Now you can also let multiple people join with the latter URL. The first person is able to see everyone else.
+
+### Support
+Chrome only. Firefox Beta coming soon.
