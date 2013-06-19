@@ -51,60 +51,6 @@ io.sockets.on('connection', function (client) {
 	var connectionIDs = [];
 	
 	/**
-	 * When a user is invited
-	 * join the room
-	 * @param {int} invitation : room number
-	 */
-/*	client.on("invite", function(invitation){
-		room = invitation;
-		guest = true;
-		client.join(room);
-		messages[room] = new Array();
-	});
-
-	/**
-	 * When a user is invited
-	 * join the room
-	 * @param {int} invitation : room number
-	 */
-/*	client.on("call", function(invitation){
-		client.broadcast.to(room).emit("call", invitation)
-	});
-
-	/**
-	 * If you are the first user to connect 
-	 * create room
-	 */
-/*	if(!guest){
-		room = Math.floor(Math.random()*1000001).toString();
-		client.emit('getRoom', {roomId : room});
-		client.join(room);
-		messages[room] = new Array();
-	}
-
-	/**
-	 * Aks for the clients ID
-	 */
-/*	client.on("askId", function(client) {
-		client.emit("askId", client.id);
-	});
-
-	/**
-	 * When a user send a SDP message
-	 * broadcast to all users in the room
-	 */
-/*  	client.on('message', function(message) {
-        var broadcastMessage = message;
-        client.broadcast.to(room).send(broadcastMessage);
-    });
-
-    /**
-	 * List of messages (chat)
-	 */
-/*	client.emit('recupererMessages', messages[room]);
-*/
-	
-	/**
 	 * When we receive a new message (chat)
 	 * add to the array
 	 * broadcast to all users in the room
@@ -136,7 +82,7 @@ io.sockets.on('connection', function (client) {
   	});
   	
   	
-  	/** ======= NEW RTC SHIT ======== **/
+  	/** ======= NEW RTC stuff ======== **/
   	client.on('RTCOpenRoom', function(message) {
   		room = message.roomId;
 		client.join(room);
@@ -162,40 +108,9 @@ io.sockets.on('connection', function (client) {
   	 * There always has to be a message.connectionId!
   	 */
   	client.on('RTCSignaling', function(message) {
-  		//var firstCall = (io.sockets.clients(message.connectionId).length === 0) ? true : false;
-  		
-  		//  if connection is not full and client has not joined yet, join.
-  		//if( io.sockets.clients(message.connectionId).length < 2 &&
-  		//		!io.sockets.manager.roomClients[client.id]['/' + message.connectionId] ) {
-	  	//	client.join(message.connectionId);
-  		//}
 	  	client.broadcast.to(message.connectionId).emit('RTCSignaling', message);
   	});
 });
-
-/*
-io.socket.on('connection', function(client) {
-	
-	var room = "";
-	var student = false;
-
-	client.emit('connectionEstablished', client.id);
-	
-	client.on('joinRoom', function(invitation) {
-		room = invitation;
-		student = true;
-		client.join(room);
-		messages[room] = new Array();
-	});
-	
-	client.on('call', function(data) {
-		if( io.sockets.clients(data.connectionId).length < 2 ) {
-			client.join(data.connectionId);
-			
-		}
-	});
-	
-});*/
 
 /**
  * Handle incoming connections,
