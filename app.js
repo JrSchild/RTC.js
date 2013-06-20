@@ -83,13 +83,19 @@ io.of('/RTC').on('connection', function (client) {
   	client.on('JoinRoom', function(message) {
   		room = message.roomId;
 		client.join(room);
-		speakers[message.roomId] = client;
+		
+		// Rip this stuff out later, this is to make it work properly with the demo.
+		// All this should be abstracted.
+		if( io.of('/RTC').clients(message.roomId).length === 1 ) {
+			speakers[message.roomId] = client;
+		}
+		client.emit('JoinRoom', {status: 'OK'});
   	});
   	
+  	// Remove this junk
   	client.on('Open', function(message) {
 		var speaker = speakers[message.roomId];
   		room = message.roomId;
-		client.join(room);
 		
 	  	if( speaker !== undefined && io.sockets.clients(message.connectionId).length === 0 ) {
 			client.join(message.connectionId);
@@ -102,11 +108,34 @@ io.of('/RTC').on('connection', function (client) {
   	});
   	
   	/**
+  	 * Not being used yet.
+  	 */
+  	client.on('getConnectionID', function(message) {
+		// message should contain the receivers ID
+		var ID = generateID();
+		client.join(ID);
+		speakers[room].join(ID);
+		console.log('Connection ID:   ' + ID);
+		client.emit('getConnectionID', ID);
+  	});
+  	
+  	/**
   	 * There always has to be a message.connectionId!
   	 */
   	client.on('Signaling', function(message) {
 	  	client.broadcast.to(message.connectionId).emit('Signaling', message);
   	});
+  	
+  	/**
+  	 * Generate random -unique- connection ID
+  	 */
+	function generateID() {
+		var ID = ( "" + Math.random() ).replace( ".", "" );			
+		if( io.sockets.clients(ID).length > 0 ) {
+			return generateID();
+		}
+		return ID;
+	}
 });
 
 /**

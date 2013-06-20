@@ -14,19 +14,22 @@ var
 	
 	var connections = [];
 	
-	if( APP.speaker ) {
-		
-		// If we're the speaker, we'll only listen for incoming calls.
-		RTC.listen({ roomId: APP.roomId }, function( data ) {
-			connections[data.connectionId] = new RTC({ video: 'true', audio: 'true' }, data)
+	RTC.join(APP.roomId, function() {
+	
+		if( APP.speaker ) {
+			// If we're the speaker, we'll only listen for incoming calls.
+			RTC.listen(function( data ) {
+				connections[data.connectionId] = new RTC({ video: 'true', audio: 'true' }, data)
+					.onReady(onRemoteStreamAdded)
+					.onRemoteHangup(onRemoteHangup);
+			});
+		} else {
+			connection1 = new RTC({ video: 'true', audio: 'true' })
 				.onReady(onRemoteStreamAdded)
 				.onRemoteHangup(onRemoteHangup);
-		});
-	} else {
-		connection1 = new RTC({ video: 'true', audio: 'true' }, { roomId: APP.roomId })
-			.onReady(onRemoteStreamAdded)
-			.onRemoteHangup(onRemoteHangup);
-	}
+		}
+		
+	});
 	
 	/**
 	 * Get the remote stream and add it to the page with a url

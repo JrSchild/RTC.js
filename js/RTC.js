@@ -1,4 +1,4 @@
-var RTC = (function( win, undefined ) {
+window.RTC = (function( win, undefined ) {
 	"use strict";
 	
 	var obj;
@@ -46,39 +46,38 @@ var RTC = (function( win, undefined ) {
 			return _this;
 		};
 		
-		if( data.type !== 'offer' ) {
+		if( !data ) {
 			// generate unique connection ID
-			_this.connectionId = data.connectionId = ( "" + Math.random() ).replace( ".", "" );
+			_this.connectionId = ( "" + Math.random() ).replace( ".", "" );
 			
-			obj.socket.on( "Signaling", function( data ) {
+			RTC.socket.on( "Signaling", function( data ) {
 				processSignalingMessage( data );
 			});
 			
-			getUserMedia(function() {
-				console.log("Adding local stream.");
-				peerConnection.addStream( obj.localStream );
-				
-				obj.socket.emit( "Open", data );
-				obj.socket.on( "Open", function( d ) {
-					if( d.ok === true ) {
-						// Create offer
-						peerConnection.createOffer( setLocalAndSendMessage /*, null, mediaConstraints */ );
-					} else if( d.ok === false ) {
-						// try again every 5 seconds.	
-						console.log("Connection not yet established, trying again in 5 seconds...");				
-						setTimeout(function() {
-							obj.socket.emit( "Open", data );
-						}, 5000);
-					}
-				});
+			console.log("Adding local stream.");
+			peerConnection.addStream( RTC.localStream );
+			
+			RTC.socket.emit( "Open", { roomId: RTC.roomID, connectionId: _this.connectionId });
+			RTC.socket.on( "Open", function( d ) {
+				if( d.ok === true ) {
+					// Create offer
+					peerConnection.createOffer( setLocalAndSendMessage /*, null, mediaConstraints */ );
+				} else if( d.ok === false ) {
+					// try again every 5 seconds.	
+					console.log("Connection not yet established, trying again in 5 seconds...");				
+					setTimeout(function() {
+						RTC.socket.emit( "Open", { roomId: RTC.roomID, connectionId: _this.connectionId } );
+					}, 5000);
+				}
 			});
+			
 		} else {
 			console.log("Adding local stream.");
-			peerConnection.addStream( obj.localStream );
+			peerConnection.addStream( RTC.localStream );
 			
 			_this.connectionId = data.connectionId;
 			
-			obj.socket.on( "Signaling", function( data ) {
+			RTC.socket.on( "Signaling", function( data ) {
 				processSignalingMessage( data );			
 			});
 			// Answer offer
@@ -153,7 +152,7 @@ var RTC = (function( win, undefined ) {
 			data.connectionId = _this.connectionId;
 			
 			// send offer
-			obj.socket.emit( "Signaling", data );
+			RTC.socket.emit( "Signaling", data );
 		}
 	
 		/**
@@ -173,7 +172,7 @@ var RTC = (function( win, undefined ) {
 					candidate: event.candidate.candidate
 				};
 				
-				obj.socket.emit( "Signaling", data );
+				RTC.socket.emit( "Signaling", data );
 			} else {
 				console.log("End of candidates. Event: ", event);
 			}
@@ -221,6 +220,10 @@ var RTC = (function( win, undefined ) {
 		}
 	};
 	
+	/** =====================================================
+	 *  PUBLIC METHODS AND VARIABLES ON THE GLOBAL RTC OBJECT
+	 ** ===================================================== */
+	
 	/**
 	 * Set the used STUN server
 	 */
@@ -244,6 +247,12 @@ var RTC = (function( win, undefined ) {
 	obj.localUrlStream = undefined;
 	
 	/**
+	 * room of the client, will be set after connection has been made
+	 * and the server says it's okay to join the room.
+	 */
+	obj.roomID = undefined;
+	
+	/**
 	 * The unique connectionId used to identify connection
 	 * between two peers
 	 */
@@ -259,16 +268,33 @@ var RTC = (function( win, undefined ) {
 	/**
 	 * This function listens for incoming offers
 	 */
-	obj.listen = function( data, callback ) {
-		getUserMedia(function() {
-			obj.socket.emit( "JoinRoom", data );
-			obj.socket.on( "Signaling", function( data ) {
-				if( data.type === 'offer' ) {
-					callback( data );
-				}
-			});
+	obj.listen = function( callback ) {
+		obj.socket.on( "Signaling", function( data ) {
+			if( data.type === 'offer' ) {
+				callback( data );
+			}
 		});
 	};
+	
+	/**
+	 * Join the room on the server, after server says it's okay
+	 * set global roomID
+	 */
+	obj.join = function( roomID, callback ) {
+		getUserMedia(function() {
+			RTC.socket.emit( "JoinRoom", { roomId: roomID });
+			RTC.socket.on( "JoinRoom", function( data ) {
+				if( data.status === "OK" ) {
+					RTC.roomID = roomID;
+					callback();
+				}
+			});		
+		});
+	};
+	
+	/** ========================
+	 *  PRIVATE HELPER FUNCTIONS
+	 ** ======================== */
 	
 	/**
 	 * get the media (audio or video) of the user
@@ -291,10 +317,10 @@ var RTC = (function( win, undefined ) {
 		return function( stream ) {
 			console.log("User has granted access to local media.");
 			
-			obj.localStream = stream;
-			obj.localUrlStream = win.URL.createObjectURL( stream );
+			RTC.localStream = stream;
+			RTC.localUrlStream = win.URL.createObjectURL( stream );
 			
-			obj.onLocalStreamAdded( obj.localUrlStream, obj.localStream );
+			RTC.onLocalStreamAdded( RTC.localUrlStream, RTC.localStream );
 			callback();
 		};
 	}
