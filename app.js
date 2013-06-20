@@ -40,11 +40,10 @@ var speakers = new Array();
 /**
 * When a user connects
 */
-io.on('connection', function (client) {
+io.of('/RTC').on('connection', function (client) {
 	client.emit('connectOk', client.id);
 	
 	//-- Variables declarations--//
-	var guest = false;
 	var room = '';
 	var RTCConnection = '';
 	var connectionIDs = [];
@@ -68,7 +67,7 @@ io.on('connection', function (client) {
  		
     	for( var currRoom in rooms ) {
     		var currRoom = currRoom.substring(1);
-    		client.broadcast.to(currRoom).emit('RTCSignaling', { type: 'bye', connectionId: currRoom });
+    		client.broadcast.to(currRoom).emit('Signaling', { type: 'bye', connectionId: currRoom });
     	}
   	});
 
@@ -80,15 +79,14 @@ io.on('connection', function (client) {
     	client.broadcast.to(room).emit('close');
   	});
   	
-  	
   	/** ======= NEW RTC stuff ======== **/
-  	client.on('RTCOpenRoom', function(message) {
+  	client.on('JoinRoom', function(message) {
   		room = message.roomId;
 		client.join(room);
 		speakers[message.roomId] = client;
   	});
   	
-  	client.on('RTCOpen', function(message) {
+  	client.on('Open', function(message) {
 		var speaker = speakers[message.roomId];
   		room = message.roomId;
 		client.join(room);
@@ -97,17 +95,17 @@ io.on('connection', function (client) {
 			client.join(message.connectionId);
 			speaker.join(message.connectionId);
 			
-			client.emit('RTCOpen', { ok: true });
+			client.emit('Open', { ok: true });
 		} else {
-			client.emit('RTCOpen', { ok: false });
+			client.emit('Open', { ok: false });
 		}
   	});
   	
   	/**
   	 * There always has to be a message.connectionId!
   	 */
-  	client.on('RTCSignaling', function(message) {
-	  	client.broadcast.to(message.connectionId).emit('RTCSignaling', message);
+  	client.on('Signaling', function(message) {
+	  	client.broadcast.to(message.connectionId).emit('Signaling', message);
   	});
 });
 

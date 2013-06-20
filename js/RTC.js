@@ -50,7 +50,7 @@ var RTC = (function( win, undefined ) {
 			// generate unique connection ID
 			_this.connectionId = data.connectionId = ( "" + Math.random() ).replace( ".", "" );
 			
-			obj.socket.on( "RTCSignaling", function( data ) {
+			obj.socket.on( "Signaling", function( data ) {
 				processSignalingMessage( data );
 			});
 			
@@ -58,8 +58,8 @@ var RTC = (function( win, undefined ) {
 				console.log("Adding local stream.");
 				peerConnection.addStream( obj.localStream );
 				
-				obj.socket.emit( "RTCOpen", data );
-				obj.socket.on( "RTCOpen", function( d ) {
+				obj.socket.emit( "Open", data );
+				obj.socket.on( "Open", function( d ) {
 					if( d.ok === true ) {
 						// Create offer
 						peerConnection.createOffer( setLocalAndSendMessage /*, null, mediaConstraints */ );
@@ -67,7 +67,7 @@ var RTC = (function( win, undefined ) {
 						// try again every 5 seconds.	
 						console.log("Connection not yet established, trying again in 5 seconds...");				
 						setTimeout(function() {
-							obj.socket.emit( "RTCOpen", data );
+							obj.socket.emit( "Open", data );
 						}, 5000);
 					}
 				});
@@ -78,7 +78,7 @@ var RTC = (function( win, undefined ) {
 			
 			_this.connectionId = data.connectionId;
 			
-			obj.socket.on( "RTCSignaling", function( data ) {
+			obj.socket.on( "Signaling", function( data ) {
 				processSignalingMessage( data );			
 			});
 			// Answer offer
@@ -153,7 +153,7 @@ var RTC = (function( win, undefined ) {
 			data.connectionId = _this.connectionId;
 			
 			// send offer
-			obj.socket.emit( "RTCSignaling", data );
+			obj.socket.emit( "Signaling", data );
 		}
 	
 		/**
@@ -173,7 +173,7 @@ var RTC = (function( win, undefined ) {
 					candidate: event.candidate.candidate
 				};
 				
-				obj.socket.emit( "RTCSignaling", data );
+				obj.socket.emit( "Signaling", data );
 			} else {
 				console.log("End of candidates. Event: ", event);
 			}
@@ -261,8 +261,8 @@ var RTC = (function( win, undefined ) {
 	 */
 	obj.listen = function( data, callback ) {
 		getUserMedia(function() {
-			obj.socket.emit( "RTCOpenRoom", data );
-			obj.socket.on( "RTCSignaling", function( data ) {
+			obj.socket.emit( "JoinRoom", data );
+			obj.socket.on( "Signaling", function( data ) {
 				if( data.type === 'offer' ) {
 					callback( data );
 				}
