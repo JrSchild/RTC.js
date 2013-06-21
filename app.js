@@ -86,13 +86,11 @@ io.of('/RTC').on('connection', function (client) {
   	client.on('getUserList', function(message) {
 	  	var clients = io.of('/RTC').clients(room);
 	  	var IDs = [];
-	  	/*for( var i in clients ) {
+	  	for( var i in clients ) {
 	  		if( client.id !== clients[i].id ) {
 				IDs.push(clients[i].id);
 			}
-	  	}*/
-	  	// For now we'll just send the speaker (for demo purposes)
-	  	IDs.push(speakers[room].id);
+	  	}
 	  	
 	  	// uuid is to make sure the right callback is called and removed after.
 	  	client.emit('getUserList' + message.uuid, IDs);
@@ -103,11 +101,6 @@ io.of('/RTC').on('connection', function (client) {
   		room = message.roomId;
 		client.join(room);
 		
-		// Rip this stuff out later, this is to make it work properly with the demo.
-		// All this should be abstracted.
-		if( io.of('/RTC').clients(message.roomId).length === 1 ) {
-			speakers[message.roomId] = client;
-		}
 		client.emit('JoinRoom', {status: 'OK'});
   	});
   	
@@ -128,7 +121,8 @@ io.of('/RTC').on('connection', function (client) {
   	 * There always has to be a message.connectionId!
   	 */
   	client.on('Signaling', function(message) {
-	  	client.broadcast.to(message.connectionId).emit('Signaling', message);
+  		if( message && message.connectionId )
+			client.broadcast.to(message.connectionId).emit('Signaling', message);
   	});
   	
   	/**
@@ -138,8 +132,8 @@ io.of('/RTC').on('connection', function (client) {
 		// message should contain the receivers ID
 		var ID = generateID();
 		client.join(ID);
-		speakers[room].join(ID);
-		console.log('Connection ID:   ' + ID);
+		//speakers[room].join(ID);
+		//console.log('Connection ID:   ' + ID);
 		client.emit('getConnectionID', ID);
   	});
   	

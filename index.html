@@ -18,7 +18,7 @@
 				speaker: location.hash.substring(1,5) === "join" ? false : true,
 				roomId: 1,
 				name: 'Prof. Drs. J.P.S. Ruitenschild',
-				socketHost: '127.0.0.1:8889/RTC'
+				socketHost: '192.168.1.3:8889/RTC'
 			};
 		</script>
         
@@ -66,10 +66,8 @@
 		</div>
 		</div>
 		
-		
-		
 		<!-- Call the socket.io Ressources of the server -->
-		<script src="./socket.io/socket.io.js"></script>
+		<script src="http://192.168.1.3:8889/socket.io/socket.io.js"></script>
 		
 		<!-- JavaScript Ressources -->
         <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>-->

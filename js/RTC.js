@@ -230,9 +230,10 @@ window.RTC = (function( win, undefined ) {
 	 */
 	obj.prototype.toggleSound = function( force ) {
 		var audioTrack = this.remoteStream.getAudioTracks()[0];
-							
-		audioTrack.enabled = ( force !== undefined ) ? force :
-							( ( audioTrack.enabled === true ) ? false : true );
+		
+		if( audioTrack )
+			audioTrack.enabled = ( force !== undefined ) ? force :
+								( ( audioTrack.enabled === true ) ? false : true );
 		return this;
 	};
 	
@@ -275,15 +276,11 @@ window.RTC = (function( win, undefined ) {
 	 */
 	obj.onLocalStreamAdded = function() {};
 	
-	/**
-	 * This function listens for incoming offers
-	 */
-	obj.listen = function( callback ) {
-		obj.socket.on( "Signaling", function( data ) {
-			if( data.type === 'offer' ) {
-				callback( data );
-			}
-		});
+	var onIncoming = function() {};
+	
+	obj.onIncoming = function( callback ) {
+		onIncoming = callback;
+		return this;
 	};
 	
 	/**
@@ -292,6 +289,11 @@ window.RTC = (function( win, undefined ) {
 	 */
 	obj.join = function( roomID, callback ) {
 		getUserMedia(function() {
+			// listen for incoming offers and send the offers to the onIncoming callback
+			obj.socket.on( "Signaling", function( data ) {
+				if( data.type === 'offer' )
+					onIncoming( data );
+			});
 			RTC.socket.emit( "JoinRoom", { roomId: roomID });
 			RTC.socket.on( "JoinRoom", function( data ) {
 				if( data.status === "OK" ) {
