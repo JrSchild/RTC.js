@@ -15,7 +15,6 @@ window.RTC = (function( win, undefined ) {
 		_this = this,
 		onReady = function() {},
 		onRemoteHangup = function() {},
-		remoteStream,
 		mediaConstraints = {
 			'has_video': options.video || false,
 			'has_audio': options.audio || false
@@ -37,25 +36,17 @@ window.RTC = (function( win, undefined ) {
 			onReady = callback;
 			return _this;
 		};
+			
+		console.log("Adding local stream.");
+		peerConnection.addStream( RTC.localStream );
 		
-		this.toggleSound = function( force ) {
-			var audioTrack = remoteStream.getAudioTracks()[0];
-								
-			audioTrack.enabled = ( force !== undefined ) ? force :
-								( ( audioTrack.enabled === true ) ? false : true );
-			return _this;
-		};
+		RTC.socket.on( "Signaling", function( data ) {
+			processSignalingMessage( data );
+		});
 		
 		if( !data ) {
 			// generate unique connection ID
 			_this.connectionId = ( "" + Math.random() ).replace( ".", "" );
-			
-			RTC.socket.on( "Signaling", function( data ) {
-				processSignalingMessage( data );
-			});
-			
-			console.log("Adding local stream.");
-			peerConnection.addStream( RTC.localStream );
 			
 			RTC.socket.emit( "Open", { roomId: RTC.roomID, connectionId: _this.connectionId });
 			RTC.socket.on( "Open", function( d ) {
@@ -72,14 +63,8 @@ window.RTC = (function( win, undefined ) {
 			});
 			
 		} else {
-			console.log("Adding local stream.");
-			peerConnection.addStream( RTC.localStream );
-			
 			_this.connectionId = data.connectionId;
 			
-			RTC.socket.on( "Signaling", function( data ) {
-				processSignalingMessage( data );			
-			});
 			// Answer offer
 			processSignalingMessage( data );
 		}
@@ -186,10 +171,10 @@ window.RTC = (function( win, undefined ) {
 		function onRemoteStreamAdded( event ) {
 			console.log( 'Remote stream added.', event );
 			
-			remoteStream = event.stream;
-			var remoteUrlStream = win.URL.createObjectURL( remoteStream );
+			_this.remoteStream = event.stream;
+			var remoteUrlStream = win.URL.createObjectURL( _this.remoteStream );
 			
-			onReady.call( _this, remoteUrlStream, remoteStream );
+			onReady.call( _this, remoteUrlStream, _this.remoteStream );
 		}
 	
 		/**
@@ -218,6 +203,29 @@ window.RTC = (function( win, undefined ) {
 		function onRemoteStreamRemoved( event ) {
 			console.log( 'Remote stream removed.', event );
 		}
+	};
+	
+	/**
+	 * The unique connectionId used to identify connection
+	 * between two peers
+	 */
+	obj.prototype.connectionId = undefined;
+	
+	/**
+	 * Incoming stream from other client.
+	 */
+	obj.prototype.remoteStream = undefined;
+	
+	/**
+	 * Toggle the sound of the remote stream or turn it off or on
+	 * by passing true or false.
+	 */
+	obj.prototype.toggleSound = function( force ) {
+		var audioTrack = this.remoteStream.getAudioTracks()[0];
+							
+		audioTrack.enabled = ( force !== undefined ) ? force :
+							( ( audioTrack.enabled === true ) ? false : true );
+		return this;
 	};
 	
 	/** =====================================================
@@ -251,12 +259,6 @@ window.RTC = (function( win, undefined ) {
 	 * and the server says it's okay to join the room.
 	 */
 	obj.roomID = undefined;
-	
-	/**
-	 * The unique connectionId used to identify connection
-	 * between two peers
-	 */
-	obj.prototype.connectionId = undefined;
 	
 	/**
 	 * Called when the remote stream has been added
