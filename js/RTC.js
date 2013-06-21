@@ -39,7 +39,7 @@ window.RTC = (function( win, undefined ) {
 		};
 		
 		this.toggleSound = function( force ) {
-			var audioTrack = remoteStream.audioTracks[0];
+			var audioTrack = remoteStream.getAudioTracks()[0];
 								
 			audioTrack.enabled = ( force !== undefined ) ? force :
 								( ( audioTrack.enabled === true ) ? false : true );
