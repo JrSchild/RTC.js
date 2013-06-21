@@ -24,12 +24,29 @@ var
 					.onRemoteHangup(onRemoteHangup);
 			});
 		} else {
-			connection1 = new RTC({ video: 'true', audio: 'true' })
-				.onReady(onRemoteStreamAdded)
-				.onRemoteHangup(onRemoteHangup);
+			// otherwise, get a list of clients from the server and call the first one.
+			getUserList(function(clients) {
+				console.log('CLIENTS:   ', clients);
+				connection1 = new RTC({ video: 'true', audio: 'true' }, {client: clients[0]})
+					.onReady(onRemoteStreamAdded)
+					.onRemoteHangup(onRemoteHangup);
+			});
 		}
 		
 	});
+	
+	/**
+	 * Get a list of users from the server, this has been constructed in such a way
+	 * that it won't collide when called multiple times.
+	 */
+	function getUserList(callback) {
+		var uuid = +( "" + Math.random() ).replace( ".", "" );
+		socket.emit('getUserList', {uuid: uuid});
+		socket.on('getUserList' + uuid, function(data) {
+			callback(data);
+			socket.removeAllListeners('getUserList'+uuid);
+		});
+	}
 	
 	/**
 	 * Get the remote stream and add it to the page with a url
@@ -37,6 +54,9 @@ var
 	 * @return {void}
 	 */
 	function onRemoteStreamAdded( streamUrl, localStream ) {
+		getUserList(function(d) {
+			console.log(d);
+		})
 		remoteVideo = $('<video autoplay="autoplay" src="' + streamUrl + '" id="stream-' + this.connectionId + '" />')
 						.data('connectionId', this.connectionId);
 		enableChat();

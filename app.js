@@ -62,7 +62,7 @@ io.of('/RTC').on('connection', function (client) {
 	 * When the user hangs up
 	 * broadcast bye signal to all users in the room
 	 */
- 	client.on('disconnect',function() {
+ 	client.on('disconnect', function() {
  		var rooms = io.sockets.manager.roomClients[client.id];
  		
     	for( var currRoom in rooms ) {
@@ -75,8 +75,21 @@ io.of('/RTC').on('connection', function (client) {
 	 * When the user close the application
 	 * broadcast close signal to all users in the room
 	 */
-  	client.on('exit',function(){
-    	client.broadcast.to(room).emit('close');
+  	client.on('exit', function(){
+		client.broadcast.to(room).emit('close');
+  	});
+  	
+  	client.on('getUserList', function(message) {
+	  	var clients = io.of('/RTC').clients(room);
+	  	var IDs = [];
+	  	/*for( var i in clients ) {
+	  		if( client.id !== clients[i].id ) {
+				IDs.push(clients[i].id);
+			}
+	  	}*/
+	  	// For now we'll just send the speaker (for demo purposes)
+	  	IDs.push(speakers[room].id);
+	  	client.emit('getUserList' + message.uuid, IDs);
   	});
   	
   	/** ======= NEW RTC stuff ======== **/
@@ -93,22 +106,28 @@ io.of('/RTC').on('connection', function (client) {
   	});
   	
   	// Remove this junk
-  	client.on('Open', function(message) {
-		var speaker = speakers[message.roomId];
-  		room = message.roomId;
-		
-	  	if( speaker !== undefined && io.sockets.clients(message.connectionId).length === 0 ) {
+  	client.on('Call', function(message) {
+  		var receiver = getClientById(message.client);
+  		
+  		if( receiver ) {
 			client.join(message.connectionId);
-			speaker.join(message.connectionId);
+			receiver.join(message.connectionId);
 			
-			client.emit('Open', { ok: true });
-		} else {
-			client.emit('Open', { ok: false });
-		}
+			client.emit('Call', { ok: true });
+  		} else {
+			client.emit('Call', { ok: false });
+  		}
   	});
   	
   	/**
-  	 * Not being used yet.
+  	 * There always has to be a message.connectionId!
+  	 */
+  	client.on('Signaling', function(message) {
+	  	client.broadcast.to(message.connectionId).emit('Signaling', message);
+  	});
+  	
+  	/**
+  	 * Ugly and not being used yet.
   	 */
   	client.on('getConnectionID', function(message) {
 		// message should contain the receivers ID
@@ -120,13 +139,6 @@ io.of('/RTC').on('connection', function (client) {
   	});
   	
   	/**
-  	 * There always has to be a message.connectionId!
-  	 */
-  	client.on('Signaling', function(message) {
-	  	client.broadcast.to(message.connectionId).emit('Signaling', message);
-  	});
-  	
-  	/**
   	 * Generate random -unique- connection ID
   	 */
 	function generateID() {
@@ -135,6 +147,16 @@ io.of('/RTC').on('connection', function (client) {
 			return generateID();
 		}
 		return ID;
+	}
+	
+	function getClientById(id) {
+		var clients = io.of('/RTC').clients(room);
+	  	for( var i in clients ) {
+	  		if( clients[i].id === id ) {
+				return clients[i];
+			}
+	  	}
+	  	return false;
 	}
 });
 

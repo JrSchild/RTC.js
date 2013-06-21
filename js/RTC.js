@@ -13,11 +13,14 @@ window.RTC = (function( win, undefined ) {
 	obj = function( options, data ) {
 	var
 		_this = this,
+		data = data || {},
 		onReady = function() {},
 		onRemoteHangup = function() {},
 		mediaConstraints = {
-			'has_video': options.video || false,
-			'has_audio': options.audio || false
+			'mandatory': {
+				'OfferToReceiveAudio': options.video || false, 
+				'OfferToReceiveVideo': options.audio || false
+			}
 		},
 		peerConnection = createPeerConnection();
 		
@@ -44,21 +47,15 @@ window.RTC = (function( win, undefined ) {
 			processSignalingMessage( data );
 		});
 		
-		if( !data ) {
+		if( data.client ) {
 			// generate unique connection ID
 			_this.connectionId = ( "" + Math.random() ).replace( ".", "" );
 			
-			RTC.socket.emit( "Open", { roomId: RTC.roomID, connectionId: _this.connectionId });
-			RTC.socket.on( "Open", function( d ) {
+			RTC.socket.emit( "Call", { client: data.client, connectionId: _this.connectionId });
+			RTC.socket.on( "Call", function( d ) {
 				if( d.ok === true ) {
 					// Create offer
-					peerConnection.createOffer( setLocalAndSendMessage /*, null, mediaConstraints */ );
-				} else if( d.ok === false ) {
-					// try again every 5 seconds.	
-					console.log("Connection not yet established, trying again in 5 seconds...");				
-					setTimeout(function() {
-						RTC.socket.emit( "Open", { roomId: RTC.roomID, connectionId: _this.connectionId } );
-					}, 5000);
+					peerConnection.createOffer( setLocalAndSendMessage , null, mediaConstraints );
 				}
 			});
 			
@@ -110,7 +107,7 @@ window.RTC = (function( win, undefined ) {
 				
 				// Answer back
 				console.log("Sending answer to peer.");
-				peerConnection.createAnswer(setLocalAndSendMessage /*, null, mediaConstraints */);
+				peerConnection.createAnswer( setLocalAndSendMessage, null, mediaConstraints );
 			} else if( message.type === 'answer' ) {
 				
 				peerConnection.setRemoteDescription( new win.RTCSessionDescription( message ) );
