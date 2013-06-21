@@ -1,3 +1,13 @@
+/*!
+ * RTC.js - Low level abstraction for Real Time Communication 
+ * ---
+ * @author Joram Ruitenschild
+ * @version 0.0.1-beta
+ * @updated 21-JUNE-2013
+ * ---
+ * @license Dual licensed under the MIT and GPL licenses
+ * @info https://github.com/JrSchild/RTC.js
+ */
 window.RTC = (function( win, undefined ) {
 	"use strict";
 	
@@ -49,9 +59,9 @@ window.RTC = (function( win, undefined ) {
 		
 		if( data.client ) {
 			// generate unique connection ID
-			_this.connectionId = ( "" + Math.random() ).replace( ".", "" );
+			this.connectionId = ( "" + Math.random() ).replace( ".", "" );
 			
-			RTC.socket.emit( "Call", { client: data.client, connectionId: _this.connectionId });
+			RTC.socket.emit( "Call", { client: data.client, connectionId: this.connectionId });
 			RTC.socket.on( "Call", function( d ) {
 				if( d.ok === true ) {
 					// Create offer
@@ -60,7 +70,7 @@ window.RTC = (function( win, undefined ) {
 			});
 			
 		} else {
-			_this.connectionId = data.connectionId;
+			this.connectionId = data.connectionId;
 			
 			// Answer offer
 			processSignalingMessage( data );
@@ -126,11 +136,12 @@ window.RTC = (function( win, undefined ) {
 		 * @return {void}
 		 */
 		function setLocalAndSendMessage( sessionDescription ) {
+			var data = sessionDescription;
+			
 			peerConnection.setLocalDescription( sessionDescription );
 			
 			console.log( 'C->S: ', JSON.stringify( sessionDescription ) );
 			
-			var data = sessionDescription;
 			data.connectionId = _this.connectionId;
 			
 			// send offer

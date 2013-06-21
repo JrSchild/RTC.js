@@ -62,14 +62,14 @@ io.of('/RTC').on('connection', function (client) {
 	 * When the user hangs up
 	 * broadcast bye signal to all users in the room
 	 */
- 	client.on('disconnect', function() {
- 		var rooms = io.sockets.manager.roomClients[client.id];
- 		
-    	for( var currRoom in rooms ) {
-    		var currRoom = currRoom.substring(1);
-    		client.broadcast.to(currRoom).emit('Signaling', { type: 'bye', connectionId: currRoom });
-    	}
-  	});
+	client.on('disconnect', function() {
+		var rooms = io.sockets.manager.roomClients[client.id];
+		
+		for( var currRoom in rooms ) {
+			var currRoom = currRoom.substring(1);
+			client.broadcast.to(currRoom).emit('Signaling', { type: 'bye', connectionId: currRoom });
+		}
+	});
 
   	/**
 	 * When the user close the application
@@ -79,6 +79,10 @@ io.of('/RTC').on('connection', function (client) {
 		client.broadcast.to(room).emit('close');
   	});
   	
+  	/**
+  	 * Send a list back to the client of all clients in the room
+  	 * excluding the current client.
+  	 */
   	client.on('getUserList', function(message) {
 	  	var clients = io.of('/RTC').clients(room);
 	  	var IDs = [];
@@ -89,6 +93,8 @@ io.of('/RTC').on('connection', function (client) {
 	  	}*/
 	  	// For now we'll just send the speaker (for demo purposes)
 	  	IDs.push(speakers[room].id);
+	  	
+	  	// uuid is to make sure the right callback is called and removed after.
 	  	client.emit('getUserList' + message.uuid, IDs);
   	});
   	
@@ -105,7 +111,6 @@ io.of('/RTC').on('connection', function (client) {
 		client.emit('JoinRoom', {status: 'OK'});
   	});
   	
-  	// Remove this junk
   	client.on('Call', function(message) {
   		var receiver = getClientById(message.client);
   		

@@ -19,15 +19,14 @@ var
 		if( APP.speaker ) {
 			// If we're the speaker, we'll only listen for incoming calls.
 			RTC.listen(function( data ) {
-				connections[data.connectionId] = new RTC({ video: 'true', audio: 'true' }, data)
+				connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
 					.onReady(onRemoteStreamAdded)
 					.onRemoteHangup(onRemoteHangup);
 			});
 		} else {
 			// otherwise, get a list of clients from the server and call the first one.
 			getUserList(function(clients) {
-				console.log('CLIENTS:   ', clients);
-				connection1 = new RTC({ video: 'true', audio: 'true' }, {client: clients[0]})
+				connection1 = new RTC({ video: true, audio: true }, {client: clients[0]})
 					.onReady(onRemoteStreamAdded)
 					.onRemoteHangup(onRemoteHangup);
 			});
@@ -40,7 +39,9 @@ var
 	 * that it won't collide when called multiple times.
 	 */
 	function getUserList(callback) {
+		// uuid is to make sure the right callback is called and removed after.
 		var uuid = +( "" + Math.random() ).replace( ".", "" );
+		
 		socket.emit('getUserList', {uuid: uuid});
 		socket.on('getUserList' + uuid, function(data) {
 			callback(data);
