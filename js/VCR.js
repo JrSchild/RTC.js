@@ -8,7 +8,7 @@ var
 	remoteVideo,
 	mainVideo = false;
 	
-	RTC.socket = socket = io.connect(APP.socketHost);
+	RTC.socket = socket = io.connect( APP.host + '/' + APP.namespace );
 	
 	RTC.onLocalStreamAdded = onLocalStreamAdded;
 	

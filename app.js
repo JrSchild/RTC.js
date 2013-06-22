@@ -97,7 +97,6 @@ io.of('/' + namespace).on('connection', function (client) {
 		client.emit('getUserList' + message.uuid, IDs);
 	});
 	
-	/** ======= NEW RTC stuff ======== **/
 	client.on('JoinRoom', function(message) {
 		room = message.roomId + "";
 		client.join(room);
