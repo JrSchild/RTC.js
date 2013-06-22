@@ -28,25 +28,20 @@ var fs = require('fs');
 var path = require('path');
 
 /**
- * Declare the variable messages for the chat
+ * Global namespace to be used
  */
-var messages = new Array();
-
-/**
- * Hold a list of all speakers
- */
-var speakers = new Array();
+var namespace = 'RTC';
 
 /**
 * When a user connects
 */
-io.of('/RTC').on('connection', function (client) {
+io.of('/' + namespace).on('connection', function (client) {
+	"use strict";
+	
 	client.emit('connectOk', client.id);
 	
 	//-- Variables declarations--//
 	var room = '';
-	var RTCConnection = '';
-	var connectionIDs = [];
 	
 	/**
 	 * When we receive a new message (chat)
@@ -66,80 +61,90 @@ io.of('/RTC').on('connection', function (client) {
 		var rooms = io.sockets.manager.roomClients[client.id];
 		
 		for( var currRoom in rooms ) {
-			var currRoom = currRoom.substring(1);
-			client.broadcast.to(currRoom).emit('Signaling', { type: 'bye', connectionId: currRoom });
+			if( rooms.hasOwnProperty(currRoom) ) {
+				var match = /([^/]+$)/g.exec(currRoom);
+				
+				if( match && match[0] && match[0] !== namespace && match[0] !== room ) {
+					client.broadcast.to(match[0]).emit('Signaling', { type: 'bye', connectionId: match[0] });
+				}
+			}
 		}
 	});
 
-  	/**
+	/**
 	 * When the user close the application
 	 * broadcast close signal to all users in the room
 	 */
-  	client.on('exit', function(){
+	client.on('exit', function(){
 		client.broadcast.to(room).emit('close');
-  	});
-  	
-  	/**
-  	 * Send a list back to the client of all clients in the room
-  	 * excluding the current client.
-  	 */
-  	client.on('getUserList', function(message) {
-	  	var clients = io.of('/RTC').clients(room);
-	  	var IDs = [];
-	  	for( var i in clients ) {
-	  		if( client.id !== clients[i].id ) {
+	});
+	
+	/**
+	 * Send a list back to the client of all clients in the room
+	 * excluding the current client.
+	 */
+	client.on('getUserList', function(message) {
+		var clients = io.of('/' + namespace).clients(room);
+		var IDs = [];
+		
+		for( var i in clients ) {
+			if( client.id !== clients[i].id ) {
 				IDs.push(clients[i].id);
 			}
-	  	}
-	  	
-	  	// uuid is to make sure the right callback is called and removed after.
-	  	client.emit('getUserList' + message.uuid, IDs);
-  	});
-  	
-  	/** ======= NEW RTC stuff ======== **/
-  	client.on('JoinRoom', function(message) {
-  		room = message.roomId;
+		}
+		
+		// uuid is to make sure the right callback is called and removed after.
+		client.emit('getUserList' + message.uuid, IDs);
+	});
+	
+	/** ======= NEW RTC stuff ======== **/
+	client.on('JoinRoom', function(message) {
+		room = message.roomId + "";
 		client.join(room);
 		
 		client.emit('JoinRoom', {status: 'OK'});
-  	});
-  	
-  	client.on('Call', function(message) {
-  		var receiver = getClientById(message.client);
-  		
-  		if( receiver ) {
+	});
+	
+	client.on('Call', function(message) {
+		var receiver = getClientById(message.client);
+		
+		if( receiver ) {
 			client.join(message.connectionId);
 			receiver.join(message.connectionId);
 			
 			client.emit('Call', { ok: true });
-  		} else {
+		} else {
 			client.emit('Call', { ok: false });
-  		}
-  	});
-  	
-  	/**
-  	 * There always has to be a message.connectionId!
-  	 */
-  	client.on('Signaling', function(message) {
-  		if( message && message.connectionId )
+		}
+	});
+
+	/**
+	 * There always has to be a message.connectionId!
+	 */
+	client.on('Signaling', function(message) {
+		if( message && message.connectionId ) {
 			client.broadcast.to(message.connectionId).emit('Signaling', message);
-  	});
-  	
-  	/**
-  	 * Ugly and not being used yet.
-  	 */
-  	client.on('getConnectionID', function(message) {
+		}
+	});
+	
+	/**
+	 * Ugly and not being used yet.
+	 */
+	client.on('getConnectionID', function(message) {
+		if( !message ) {
+			return;
+		}
 		// message should contain the receivers ID
 		var ID = generateID();
 		client.join(ID);
 		//speakers[room].join(ID);
 		//console.log('Connection ID:   ' + ID);
 		client.emit('getConnectionID', ID);
-  	});
-  	
-  	/**
-  	 * Generate random -unique- connection ID
-  	 */
+	});
+	
+	/**
+	 * Generate random -unique- connection ID
+	 */
 	function generateID() {
 		var ID = ( "" + Math.random() ).replace( ".", "" );			
 		if( io.sockets.clients(ID).length > 0 ) {
@@ -149,13 +154,13 @@ io.of('/RTC').on('connection', function (client) {
 	}
 	
 	function getClientById(id) {
-		var clients = io.of('/RTC').clients(room);
-	  	for( var i in clients ) {
-	  		if( clients[i].id === id ) {
+		var clients = io.of('/' + namespace).clients(room);
+		for( var i in clients ) {
+			if( clients[i].id === id ) {
 				return clients[i];
 			}
-	  	}
-	  	return false;
+		}
+		return false;
 	}
 });
 
@@ -164,56 +169,58 @@ io.of('/RTC').on('connection', function (client) {
  * other than websockets
  */
 function handler(request, response) {
-    var filePath = '.' + request.url;
-    
-    if (filePath == './') {
-        filePath = './index.html';
-    }
-         
-    var extname = path.extname(filePath);
-    var contentType;
-    
-    switch (extname) {
-        case '.js':
-            contentType = 'text/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-        case '.jpg':
-            contentType = 'image/jpeg';
-            break;
-        case '.png':
-            contentType = 'image/png';
-            break;
-        default:
-        	contentType = 'text/html';
-    }
-     
-    path.exists(filePath, function(exists) {
-    	
-        if (exists) {
-            fs.readFile(filePath, function(error, content) {
-                if (error) {
-                    response.writeHead(500);
-                    response.end();
-                }
-                else {
-                    response.writeHead(200, { 'Content-Type': contentType });
-                    response.end(content, 'utf-8');
-                }
-            });
-        }
-        else {
-        	fs.readFile(filePath, function (err, data) {
-			    if (err) {
-				    response.writeHead(500);
-				    response.end('Error loading index.html');
+	"use strict";
+
+	var filePath = '.' + request.url;
+	
+	if (filePath === './') {
+		filePath = './index.html';
+	}
+		 
+	var extname = path.extname(filePath);
+	var contentType;
+	
+	switch (extname) {
+		case '.js':
+			contentType = 'text/javascript';
+			break;
+		case '.css':
+			contentType = 'text/css';
+			break;
+		case '.jpg':
+			contentType = 'image/jpeg';
+			break;
+		case '.png':
+			contentType = 'image/png';
+			break;
+		default:
+			contentType = 'text/html';
+	}
+	 
+	path.exists(filePath, function(exists) {
+		
+		if (exists) {
+			fs.readFile(filePath, function(error, content) {
+				if (error) {
+					response.writeHead(500);
+					response.end();
+				}
+				else {
+					response.writeHead(200, { 'Content-Type': contentType });
+					response.end(content, 'utf-8');
+				}
+			});
+		}
+		else {
+			fs.readFile(filePath, function (err, data) {
+				if (err) {
+					response.writeHead(500);
+					response.end('Error loading index.html');
 				}
 				response.writeHead(200);
 				response.end(data);
-		    });
-        }
-    });
+			});
+		}
+	});
 
 }
