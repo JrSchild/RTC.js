@@ -62,10 +62,11 @@ io.of('/' + namespace).on('connection', function (client) {
 		
 		for( var currRoom in rooms ) {
 			if( rooms.hasOwnProperty(currRoom) ) {
+				// get string after the last slash.
 				var match = /([^/]+$)/g.exec(currRoom);
 				
 				if( match && match[0] && match[0] !== namespace && match[0] !== room ) {
-					client.broadcast.to(match[0]).emit('Signaling', { type: 'bye', connectionId: match[0] });
+					client.broadcast.to(match[0]).emit('Signaling', { type: 'bye', connectionID: match[0] });
 				}
 			}
 		}
@@ -94,51 +95,36 @@ io.of('/' + namespace).on('connection', function (client) {
 		}
 		
 		// uuid is to make sure the right callback is called and removed after.
-		client.emit('getUserList' + message.uuid, IDs);
+		client.emit('getUserList' + (message && message.uuid ? message.uuid : ''), IDs);
 	});
 	
 	client.on('JoinRoom', function(message) {
-		room = message.roomId + "";
+		room = message.roomID + "";
 		client.join(room);
 		
-		client.emit('JoinRoom', {status: 'OK'});
+		client.emit('JoinRoom' + (message && message.uuid ? message.uuid : ''), {status: 'OK'});
 	});
 	
 	client.on('Call', function(message) {
 		var receiver = getClientById(message.client);
+		var data = {};
 		
 		if( receiver ) {
-			client.join(message.connectionId);
-			receiver.join(message.connectionId);
+			var connectionID = data.connectionID = generateID();
 			
-			client.emit('Call', { ok: true });
-		} else {
-			client.emit('Call', { ok: false });
+			client.join(connectionID);
+			receiver.join(connectionID);
 		}
+		client.emit('Call' + (message && message.uuid ? message.uuid : ''), data);
 	});
 
 	/**
-	 * There always has to be a message.connectionId!
+	 * There always has to be a message.connectionID!
 	 */
 	client.on('Signaling', function(message) {
-		if( message && message.connectionId ) {
-			client.broadcast.to(message.connectionId).emit('Signaling', message);
+		if( message && message.connectionID ) {
+			client.broadcast.to(message.connectionID).emit('Signaling', message);
 		}
-	});
-	
-	/**
-	 * Ugly and not being used yet.
-	 */
-	client.on('getConnectionID', function(message) {
-		if( !message ) {
-			return;
-		}
-		// message should contain the receivers ID
-		var ID = generateID();
-		client.join(ID);
-		//speakers[room].join(ID);
-		//console.log('Connection ID:   ' + ID);
-		client.emit('getConnectionID', ID);
 	});
 	
 	/**

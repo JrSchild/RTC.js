@@ -25,7 +25,7 @@ var
 			});
 		} else {
 			// otherwise, get a list of clients from the server and call the first one.
-			getUserList(function( clients ) {
+			RTC.getUserList(function( clients ) {
 				if( clients[0] )
 					connection1 = new RTC({ video: true, audio: true }, {client: clients[0]})
 						.onReady(onRemoteStreamAdded)
@@ -36,44 +36,11 @@ var
 	});
 	
 	/**
-	 * Get a list of users from the server, this has been constructed in such a way
-	 * that it won't collide when called multiple times.
-	 */
-	function getUserList(callback) {
-		// uuid is to make sure the right callback is called and removed after.
-		var uuid = +( "" + Math.random() ).replace( ".", "" );
-		
-		socket.emit('getUserList', {uuid: uuid});
-		socket.on('getUserList' + uuid, function(data) {
-			callback(data);
-			socket.removeAllListeners('getUserList'+uuid);
-		});
-	}
-	
-	/**
-	 * Experiment to create functions with callbacks from server
-	 */
-	function once(action, callback, data) {
-		// uuid is to make sure the right callback is called and removed after.
-		data.uuid = +( "" + Math.random() ).replace( ".", "" );
-		
-		socket.emit(action, {uuid: uuid});
-		socket.on(action + uuid, function(data) {
-			socket.removeAllListeners(action+uuid);
-			data.uuid = null;
-			callback(data);
-		});
-	}
-	
-	/**
 	 * Get the remote stream and add it to the page with a url
 	 * @param  {event} event : event given by the browser
 	 * @return {void}
 	 */
 	function onRemoteStreamAdded( streamUrl, localStream ) {
-		getUserList(function(d) {
-			console.log(d);
-		})
 		remoteVideo = $('<video autoplay="autoplay" src="' + streamUrl + '" id="stream-' + this.connectionId + '" />')
 						.data('connectionId', this.connectionId);
 		enableChat();
