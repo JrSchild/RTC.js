@@ -49,7 +49,7 @@ window.RTC = (function( win, undefined ) {
 			onReady = callback;
 			return _this;
 		};
-			
+		
 		console.log("Adding local stream.");
 		peerConnection.addStream( RTC.localStream );
 		
@@ -80,16 +80,17 @@ window.RTC = (function( win, undefined ) {
 		 */
 		function createPeerConnection() {
 			var pc_config = { "iceServers": [{ "url": "stun:" + RTC.STUN }] },
+				pcConstraints = {"optional": [{"DtlsSrtpKeyAgreement": true}]},
 				peerConnection;
 			
 			try {
-				peerConnection = new win.webkitRTCPeerConnection( pc_config );
+				peerConnection = new RTCPeerConnection( pc_config, pcConstraints );
 				peerConnection.onicecandidate = onIceCandidate;
 				console.log("Created webkitRTCPeerConnnection with config \"" + JSON.stringify(pc_config) + "\".");
 			} catch( e ) {
-				peerConnection = false;
 				alert("Cannot create PeerConnection object; Is the 'PeerConnection' flag enabled in about:flags?");
 				console.log("Failed to create PeerConnection, exception: " + e.message);
+				return;
 			}
 			
 			peerConnection.onconnecting = onSessionConnecting;
@@ -111,16 +112,15 @@ window.RTC = (function( win, undefined ) {
 			}
 			
 			if( message.type === 'offer' ) {
-				peerConnection.setRemoteDescription( new win.RTCSessionDescription( message ) );
+				peerConnection.setRemoteDescription( new RTCSessionDescription( message ) );
 				
 				// Answer back
 				console.log("Sending answer to peer.");
 				peerConnection.createAnswer( setLocalAndSendMessage, null, mediaConstraints );
 			} else if( message.type === 'answer' ) {
-				
-				peerConnection.setRemoteDescription( new win.RTCSessionDescription( message ) );
+				peerConnection.setRemoteDescription( new RTCSessionDescription( message ) );
 			} else if( message.type === 'candidate' ) {
-				var candidate = new win.RTCIceCandidate({
+				var candidate = new RTCIceCandidate({
 					sdpMLineIndex: message.label,
 					candidate: message.candidate
 				});
@@ -134,13 +134,15 @@ window.RTC = (function( win, undefined ) {
 		 * @return {void}
 		 */
 		function setLocalAndSendMessage( sessionDescription ) {
-			var data = sessionDescription;
-			
 			peerConnection.setLocalDescription( sessionDescription );
 			
-			console.log( 'C->S: ', JSON.stringify( sessionDescription ) );
+			var data = {
+				connectionID: _this.connectionID,
+				type: sessionDescription.type,
+				sdp: sessionDescription.sdp
+			}
 			
-			data.connectionID = _this.connectionID;
+			console.log( 'C->S: ', data );
 			
 			// send offer
 			RTC.socket.emit( "Signaling", data );
@@ -286,7 +288,7 @@ window.RTC = (function( win, undefined ) {
 	 * set global roomID
 	 */
 	obj.join = function( roomID, callback ) {
-		getUserMedia(function() {
+		doGetUserMedia(function() {
 			// listen for incoming offers and send the offers to the onIncoming callback
 			RTC.socket.on( "Signaling", function( data ) {
 				if( data.type === 'offer' )
@@ -312,7 +314,7 @@ window.RTC = (function( win, undefined ) {
 	
 	/**
 	 * Method to call a listener on the server with a callback,
-	 * makes sure the event is only executed once.
+	 * makes sure the event is only executed once by assigning a unique id
 	 */
 	obj.once = function( action, data, callback ) {
 		if( typeof data === "function" ) {
@@ -340,11 +342,11 @@ window.RTC = (function( win, undefined ) {
 	 * get the media (audio or video) of the user
 	 * @return {void}
 	 */
-	function getUserMedia( callback ) {
-		if( navigator.getUserMedia ) {
-			navigator.getUserMedia({ audio: true, video: true }, onUserMediaSuccess( callback ), onUserMediaError );
+	function doGetUserMedia( callback ) {
+		try {
+			getUserMedia({"audio": true, "video": {"mandatory": {}, "optional": []}}, onUserMediaSuccess( callback ), onUserMediaError);
 			console.log("Requested access to local media.");
-		}
+		} catch (e) { }
 	}
 	
 	/**
