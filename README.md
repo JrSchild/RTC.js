@@ -34,9 +34,7 @@ Use this function to join a room on the server. The callback will be fired as so
 
 *handler(data)* function()
 
-This function is used to listen for incoming calls.
-
-example:
+This function is used to listen for incoming calls. Example:
 
     RTC.onIncoming(function( data ) {
         // use the data to accept a call if you please.
@@ -103,4 +101,4 @@ To get the demo working start app.js in your node server. Change the IP-address 
 [I have put this demo online on my VPS.](http://178.21.20.114/RTC/) This demo will stay up to date with the git repo.
 
 ### Support
-Chrome and Firefox Nightly. Firefox Beta coming soon.
+Chrome and Firefox 22+.
