@@ -36,7 +36,8 @@ Use this function to join a room on the server. The callback will be fired as so
 
 This function is used to listen for incoming calls.
 
-example: 
+example:
+
     RTC.onIncoming(function( data ) {
         // use the data to accept a call if you please.
     });
@@ -97,7 +98,9 @@ Again we'll use the mediacontraints as well as a clientID.
 ### Demo
 The demo has been rewritten and will slowly gain additional features. While doing this RTC.js will be tested and developped further.
 
-To get the demo working start app.js in your node server. Change the IP-address and port of the server in index.html. Hit your browser and load up index.html. 
+To get the demo working start app.js in your node server. Change the IP-address and port of the server in index.html. Hit your browser and load up index.html.
+
+[I have put this demo online on my VPS.](http://178.21.20.114/RTC/) This demo will stay up to date with the git repo.
 
 ### Support
 Chrome and Firefox Nightly. Firefox Beta coming soon.
