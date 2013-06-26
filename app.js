@@ -96,16 +96,14 @@ io.of('/' + namespace).on('connection', function (client) {
 		}
 		
 		// uuid is to make sure the right callback is called and removed after.
-		client.emit('getUserList' + (message && message.uuid ? message.uuid : ''), IDs);
-		// possible shortcut?:
-		// (message && message.uuid || '')
+		client.emit('getUserList' + (message && message.uuid || ''), IDs);
 	});
 	
 	client.on('JoinRoom', function(message) {
 		room = message.roomID + "";
 		client.join(room);
 		
-		client.emit('JoinRoom' + (message && message.uuid ? message.uuid : ''), {status: 'OK'});
+		client.emit('JoinRoom' + (message && message.uuid || ''), {status: 'OK'});
 	});
 	
 	client.on('Call', function(message) {
@@ -118,7 +116,7 @@ io.of('/' + namespace).on('connection', function (client) {
 			client.join(connectionID);
 			receiver.join(connectionID);
 		}
-		client.emit('Call' + (message && message.uuid ? message.uuid : ''), data);
+		client.emit('Call' + (message && message.uuid || ''), data);
 	});
 
 	/**
