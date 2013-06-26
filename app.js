@@ -65,8 +65,9 @@ io.of('/' + namespace).on('connection', function (client) {
 				// get string after the last slash.
 				var match = /([^/]+$)/g.exec(currRoom);
 				
+				// rework this connectionID stuff, store connections in a local array
 				if( match && match[0] && match[0] !== namespace && match[0] !== room ) {
-					client.broadcast.to(match[0]).emit('Signaling', { type: 'bye', connectionID: match[0] });
+					client.broadcast.to(match[0]).emit('Signaling', { type: 'bye', connectionID: match[0], sender: client.id });
 				}
 			}
 		}
@@ -96,6 +97,8 @@ io.of('/' + namespace).on('connection', function (client) {
 		
 		// uuid is to make sure the right callback is called and removed after.
 		client.emit('getUserList' + (message && message.uuid ? message.uuid : ''), IDs);
+		// possible shortcut?:
+		// (message && message.uuid || '')
 	});
 	
 	client.on('JoinRoom', function(message) {
@@ -123,6 +126,9 @@ io.of('/' + namespace).on('connection', function (client) {
 	 */
 	client.on('Signaling', function(message) {
 		if( message && message.connectionID ) {
+			// attaching sender's data, add anything you like.
+			message.sender = client.id;
+			
 			client.broadcast.to(message.connectionID).emit('Signaling', message);
 		}
 	});

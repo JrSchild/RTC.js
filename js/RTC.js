@@ -126,7 +126,7 @@ window.RTC = (function( win, undefined ) {
 				});
 				peerConnection.addIceCandidate( candidate );
 			} else if( message.type === 'bye' ) {
-				onRemoteHangup.call( _this );
+				onRemoteHangup.call( _this, message );
 			}
 		}
 		
@@ -328,7 +328,7 @@ window.RTC = (function( win, undefined ) {
 		RTC.socket.emit( action, data );
 		RTC.socket.on( action + uuid, function( data ) {
 			RTC.socket.removeAllListeners( action + uuid );
-			data.uuid = null;
+			delete data.uuid;
 			callback( data );
 		});
 		return this;
