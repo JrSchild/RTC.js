@@ -5,61 +5,57 @@
 <!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
     <head>
         <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title></title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>WebRTC videochat demo</title>
         <meta name="description" content="">
-        <meta name="viewport" content="width=device-width">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
 
         <link rel="stylesheet" href="css/normalize.min.css">
         <link rel="stylesheet" href="css/main.css">
 
         <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
-		<script>
-			window.APP = {
-				host: '178.21.20.114:8889',
-				namespace: 'RTC'
-			};
-		</script>
+        <script>
+            window.APP = {
+                host: '178.21.20.114:8889',
+                namespace: 'RTC'
+            };
+        </script>
     </head>
     <body>
-    	<div class="container">
+        <div class="container">
             <header class="row">
-            	<div class="logo">
-	            	<img src="img/webrtc-logo.png" alt="WebRTC logo" />
-            	</div>
-	            <span class="title">WebRTC videochat-application</span>
+                <div class="logo">
+                    <img src="img/webrtc-logo.png" alt="WebRTC logo" />
+                </div>
+                <span class="title">WebRTC videochat-application</span>
             </header>
-	        <div class="left col">
-	            <div class="body row scroll-y">
-		            <h2>People in this room</h2>
-		            <ul class="users"></ul>
-	            </div>
-	            <div class="footer row local-stream">
-	            </div>
-	        </div>
-    	</div>
+            <div class="left col">
+                <div class="body row scroll-y">
+                    <h2>People in this room</h2>
+                    <ul class="users"></ul>
+                </div>
+                <div class="footer row local-stream"></div>
+            </div>
+        </div>
 
-		<script type="text/html" id="chat_window_tmpl">
-		    <div class="right col" id="chat-<%=clientID%>" data-clientid="<%=clientID%>">
-		        <div class="header row">
-		            <div class="profilepic"></div>
-		            <span class="title"><%=clientID%></span>
-		            <span class="call-btn" data-clientID="<%=clientID%>">Videocall</span>
-		        </div>
-		        <div class="body row">
-		            <div class="videocall">
-		            </div>
-		        </div>
-		    </div>
-		</script>
+<script type="text/html" id="chat_window_tmpl">
+    <div class="right col" id="chat-<%=clientID%>" data-clientid="<%=clientID%>">
+        <div class="header row">
+            <div class="profilepic"></div>
+            <span class="title"><%=clientID%></span>
+            <span class="call-btn" data-clientID="<%=clientID%>">Videocall</span>
+        </div>
+        <div class="body row">
+            <div class="videocall"></div>
+        </div>
+    </div>
+</script>
 
-		<!-- Call the socket.io Ressources of the server -->
-		<script>document.write('<script src="http://' + APP.host + '/socket.io/socket.io.js"><\/script>')</script>
-		
+        <!-- Call the socket.io Ressources of the server -->
+        <script>document.write('<script src="http://' + APP.host + '/socket.io/socket.io.js"><\/script>')</script>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>
         <script>window.jQuery || document.write('<script src="js/vendor/jquery-2.0.2.min.js"><\/script>')</script>
-		<script src="js/RTC.js"></script>
-		<script src="js/main.js"></script>
-
+        <script src="js/RTC.js"></script>
+        <script src="js/main.js"></script>
     </body>
 </html>

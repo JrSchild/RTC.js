@@ -14,7 +14,7 @@ $(function() {
 				.onReady(function( stream ) {
 					addVideo( stream, chatWindow.find('.videocall') );
 				})
-				.onRemoteHangup(onRemoteHangup);
+				.onRemoteHangup( onRemoteHangup );
 		});
 	});
 	
@@ -23,11 +23,11 @@ $(function() {
 		var clientID = $(this).data('clientid');
 		var chatWindow = $('#chat-' + clientID);
 		
-		new RTC({ video: true, audio: true }, {client: clientID})
+		new RTC({ video: true, audio: true },{ client: clientID })
 			.onReady(function( stream ) {
 				addVideo( stream, chatWindow.find('.videocall') );
 			})
-			.onRemoteHangup(onRemoteHangup);
+			.onRemoteHangup( onRemoteHangup );
 	});
 	
 	// Make the user list dynamic
@@ -50,7 +50,7 @@ $(function() {
 		var chatwindow = $('#chat-' + clientID);
 		
 		if( chatwindow.length === 0 ) {
-			chatwindow = $(chatWindowTmpl({clientID: clientID})).insertAfter($('.left.col'));
+			chatwindow = $(chatWindowTmpl({ clientID: clientID })).insertAfter($('.left.col'));
 		}
 		
 		$('ul.users li')

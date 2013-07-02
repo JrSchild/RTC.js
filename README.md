@@ -61,7 +61,7 @@ Method to call a listener on the server with a callback, makes sure the event is
 
 *handler()* function()
 
-#### RTC.getUserList( handler( clients) )
+#### RTC.getUserList( handler( clients ) )
 
 *handler()* function()
 
