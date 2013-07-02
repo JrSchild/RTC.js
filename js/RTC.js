@@ -17,7 +17,7 @@ window.RTC = (function( win, undefined ) {
 	
 	win.RTCPeerConnection = win.RTCPeerConnection || win.webkitRTCPeerConnection;
 	
-	if (navigator.mozGetUserMedia) {
+	if( navigator.mozGetUserMedia ) {
 		win.RTCSessionDescription = win.mozRTCSessionDescription;
 		win.RTCIceCandidate = win.mozRTCIceCandidate;
 		win.RTCPeerConnection = win.mozRTCPeerConnection;
@@ -86,7 +86,7 @@ window.RTC = (function( win, undefined ) {
 		 */
 		function createPeerConnection() {
 			var pc_config = { "iceServers": [{ "url": "stun:" + RTC.STUN }] },
-				pcConstraints = {"optional": [{"DtlsSrtpKeyAgreement": true}]},
+				pcConstraints = { "optional": [{ "DtlsSrtpKeyAgreement": true }] },
 				peerConnection;
 			
 			try {
@@ -94,7 +94,6 @@ window.RTC = (function( win, undefined ) {
 				peerConnection.onicecandidate = onIceCandidate;
 				console.log("Created webkitRTCPeerConnnection with config \"" + JSON.stringify(pc_config) + "\".");
 			} catch( e ) {
-				alert("Cannot create PeerConnection object; Is the 'PeerConnection' flag enabled in about:flags?");
 				console.log("Failed to create PeerConnection, exception: " + e.message);
 				return;
 			}
@@ -186,7 +185,7 @@ window.RTC = (function( win, undefined ) {
 			console.log( 'Remote stream added.', event );
 			
 			_this.remoteStream = event.stream;
-			var remoteUrlStream = win.URL.createObjectURL( _this.remoteStream );
+			var remoteUrlStream = URL.createObjectURL( _this.remoteStream );
 			
 			onReady.call( _this, remoteUrlStream, _this.remoteStream );
 		}
@@ -300,7 +299,7 @@ window.RTC = (function( win, undefined ) {
 				if( data.type === 'offer' )
 					onIncoming( data );
 			});
-			RTC.once( "JoinRoom", {roomID: roomID}, function( data ) {
+			RTC.once( "JoinRoom", { roomID: roomID }, function( data ) {
 				if( data.status === "OK" ) {
 					RTC.roomID = roomID;
 					callback();
@@ -328,7 +327,7 @@ window.RTC = (function( win, undefined ) {
 			data = {};
 		}
 		
-		// uuid is to make sure the right callback is called and the listener removed after.
+		// uuid is used to identify a unique listener and remove this after it's called
 		var uuid = data.uuid = +( "" + Math.random() ).replace( ".", "" );
 		
 		RTC.socket.emit( action, data );
@@ -358,7 +357,7 @@ window.RTC = (function( win, undefined ) {
 				}
 			}, onUserMediaSuccess( callback ), onUserMediaError);
 			console.log("Requested access to local media.");
-		} catch (e) { }
+		} catch( e ) { }
 	}
 	
 	/**
@@ -372,7 +371,7 @@ window.RTC = (function( win, undefined ) {
 			console.log("User has granted access to local media.");
 			
 			RTC.localStream = stream;
-			RTC.localUrlStream = win.URL.createObjectURL( stream );
+			RTC.localUrlStream = URL.createObjectURL( stream );
 			
 			RTC.onLocalStreamAdded( RTC.localUrlStream, RTC.localStream );
 			callback();
