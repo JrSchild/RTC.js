@@ -30,7 +30,13 @@ data will be the object from onIncoming to accept a call, or an object to start 
 
 Use this function to join a room on the server. The callback will be fired as soon as joining the room on the server was succesful.
 
-#### RTC.onIncoming( handler( data) )
+#### RTC.onLocalStreamAdded( handler( URLStream, stream ) )
+
+*handler(data)* function()
+callback to fire as soon as local stream has been accessed.
+
+
+#### RTC.onIncoming( handler( URLStream, stream ) )
 
 *handler(data)* function()
 
@@ -67,7 +73,7 @@ Method to call a listener on the server with a callback, makes sure the event is
 
 Additionaly you can generate a list of clientIDs currently in your room by calling:
 
-    RTC.getUserList(function( clients ) {
+    RTC.getUserList( function( clients ) {
         // do something with the list of clients
     });
 For now this can only be done through long-polling. Feel free te create a pull-request to listen for changes.
@@ -76,19 +82,19 @@ For now this can only be done through long-polling. Feel free te create a pull-r
 
 Listening for incoming calls and accepting them:
 
-    RTC.onIncoming(function( data ) {
-        connections[data.connectionId] = new RTC({ video: 'true', audio: 'true' }, data)
-            .onReady(onRemoteStreamAdded)
-            .onRemoteHangup(onRemoteHangup);
+    RTC.onIncoming( function( data ) {
+        connections[ data.connectionId ] = new RTC({ video: 'true', audio: 'true' }, data)
+            .onReady( onRemoteStreamAdded )
+            .onRemoteHangup( onRemoteHangup );
     });
 
 In RTC() we pass the media constraints that you will allow the other client access to, and the data object we received. RTC will use this data to confirm the connection.
 
 Calling someone else is just as easy:
 
-    connection1 = new RTC({ video: true, audio: true }, {client: clientID})
-        .onReady(onRemoteStreamAdded)
-        .onRemoteHangup(onRemoteHangup);
+    connection1 = new RTC({ video: true, audio: true },{ client: clientID })
+        .onReady( onRemoteStreamAdded )
+        .onRemoteHangup( onRemoteHangup );
 
 When the function onRemoteStreamAdded is fired the parameters passed are 1) streamUrl and 2) localStream. Now you can use them however you want to.
 Again we'll use the mediacontraints as well as a clientID.
