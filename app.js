@@ -106,7 +106,7 @@ io.of('/' + namespace).on('connection', function (client) {
 		client.emit('JoinRoom' + (message && message.uuid || ''), {status: 'OK'});
 	});
 	
-	client.on('Call', function(message) {
+	client.on('Connect', function(message) {
 		var receiver = getClientById(message.client);
 		var data = {};
 		
@@ -116,7 +116,7 @@ io.of('/' + namespace).on('connection', function (client) {
 			client.join(connectionID);
 			receiver.join(connectionID);
 		}
-		client.emit('Call' + (message && message.uuid || ''), data);
+		client.emit('Connect' + (message && message.uuid || ''), data);
 	});
 
 	/**

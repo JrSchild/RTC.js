@@ -2,21 +2,20 @@ $(function() {
 	var chatWindowTmpl = tmpl('chat_window_tmpl');
 	
 	RTC.socket = io.connect( APP.host + '/' + APP.namespace );
-	RTC.onLocalStreamAdded = onLocalStreamAdded;
-	
-	RTC.join(1, function() {
-		var connections = [];
-		
-		loadClients();
-		RTC.onIncoming(function( data ) {
-			var chatWindow = openChat( data.sender );
-			connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
-				.onReady(function( stream ) {
-					addVideo( stream, chatWindow.find('.videocall') );
-				})
-				.onRemoteHangup( onRemoteHangup );
+	RTC.onLocalStreamAdded( onLocalStreamAdded )
+		.join(1, function() {
+			var connections = [];
+			
+			loadClients();
+			RTC.onIncoming(function( data ) {
+				var chatWindow = openChat( data.sender );
+				connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
+					.onReady(function( stream ) {
+						addVideo( stream, chatWindow.find('.videocall') );
+					})
+					.onRemoteHangup( onRemoteHangup );
+			});
 		});
-	});
 	
 	// Apply call handler
 	$('.container').on('click', '.call-btn', function( e ) {
