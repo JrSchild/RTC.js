@@ -8,19 +8,19 @@
  * @license Dual licensed under the MIT and GPL licenses
  * @info https://github.com/JrSchild/RTC.js
  */
-(function( win, undefined ) {
+(function( window, undefined ) {
 	"use strict";
 	
 	var RTC;
 	
 	navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
 	
-	win.RTCPeerConnection = win.RTCPeerConnection || win.webkitRTCPeerConnection;
+	window.RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection;
 	
 	if( navigator.mozGetUserMedia ) {
-		win.RTCSessionDescription = win.mozRTCSessionDescription;
-		win.RTCIceCandidate = win.mozRTCIceCandidate;
-		win.RTCPeerConnection = win.mozRTCPeerConnection;
+		window.RTCSessionDescription = window.mozRTCSessionDescription;
+		window.RTCIceCandidate       = window.mozRTCIceCandidate;
+		window.RTCPeerConnection     = window.mozRTCPeerConnection;
 	}
 	
 	/**
@@ -73,7 +73,7 @@
 				peerConnection;
 			
 			try {
-				peerConnection = new win.RTCPeerConnection( pc_config, pcConstraints );
+				peerConnection = new window.RTCPeerConnection( pc_config, pcConstraints );
 				peerConnection.onicecandidate = onIceCandidate;
 				console.log("Created webkitRTCPeerConnnection with config:", pc_config);
 			} catch( e ) {
@@ -81,9 +81,9 @@
 				return;
 			}
 			
-			peerConnection.onconnecting = onSessionConnecting;
-			peerConnection.onopen = onSessionOpened;
-			peerConnection.onaddstream = onRemoteStreamAdded;
+			peerConnection.onconnecting   = onSessionConnecting;
+			peerConnection.onopen         = onSessionOpened;
+			peerConnection.onaddstream    = onRemoteStreamAdded;
 			peerConnection.onremovestream = onRemoteStreamRemoved;
 			
 			return peerConnection;
@@ -100,15 +100,15 @@
 			}
 			
 			if( message.type === "offer" ) {
-				peerConnection.setRemoteDescription( new win.RTCSessionDescription( message ) );
+				peerConnection.setRemoteDescription( new window.RTCSessionDescription( message ) );
 				
 				// Answer back
 				console.log("Sending answer to peer.");
 				peerConnection.createAnswer( setLocalAndSendMessage, null, mediaConstraints );
 			} else if( message.type === "answer" ) {
-				peerConnection.setRemoteDescription( new win.RTCSessionDescription( message ) );
+				peerConnection.setRemoteDescription( new window.RTCSessionDescription( message ) );
 			} else if( message.type === "candidate" ) {
-				var candidate = new win.RTCIceCandidate({
+				var candidate = new window.RTCIceCandidate({
 					sdpMLineIndex: message.label,
 					candidate: message.candidate
 				});
@@ -168,7 +168,7 @@
 			console.log( "Remote stream added.", event );
 			
 			_this.remoteStream = event.stream;
-			var remoteUrlStream = win.URL.createObjectURL( _this.remoteStream );
+			var remoteUrlStream = window.URL.createObjectURL( _this.remoteStream );
 			
 			_this.callbacks.onReady.call( _this, remoteUrlStream, _this.remoteStream );
 		}
@@ -383,7 +383,7 @@
 			console.log("User has granted access to local media.");
 			
 			RTC.localStream = stream;
-			RTC.localUrlStream = win.URL.createObjectURL( stream );
+			RTC.localUrlStream = window.URL.createObjectURL( stream );
 			
 			callbacks.onLocalStreamAdded( RTC.localUrlStream, RTC.localStream );
 			callback();
@@ -403,4 +403,3 @@
 	window.RTC = RTC;
 	
 })( window );
-

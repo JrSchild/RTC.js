@@ -3,18 +3,10 @@
 ///////////////////////////////////
 
 /**
- * Declare the server HTTP
- * listen to the port 8888
- */
-var http = require("http");
-var server = http.createServer(handler);
-var app = server.listen(8889);
-
-/**
  * Import socket.io module
  * on the server HTTP
  */
-var io = require('socket.io').listen(app);
+var io = require('socket.io').listen(8889);
 
 /**
  * Import fileservice module
@@ -38,20 +30,8 @@ var namespace = 'RTC';
 io.of('/' + namespace).on('connection', function (client) {
 	"use strict";
 	
-	client.emit('connectOk', client.id);
-	
 	//-- Variables declarations--//
 	var room = '';
-	
-	/**
-	 * When we receive a new message (chat)
-	 * add to the array
-	 * broadcast to all users in the room
-	 */
-	client.on('newMessage', function( mess ) {
-		client.emit('newMessage', mess);
-		client.broadcast.to( room ).emit('newMessage', mess);
-	});
 
 	/**
 	 * When the user hangs up
@@ -71,14 +51,6 @@ io.of('/' + namespace).on('connection', function (client) {
 				}
 			}
 		}
-	});
-
-	/**
-	 * When the user close the application
-	 * broadcast close signal to all users in the room
-	 */
-	client.on('exit', function(){
-		client.broadcast.to(room).emit('close');
 	});
 	
 	/**
@@ -152,64 +124,3 @@ io.of('/' + namespace).on('connection', function (client) {
 		return false;
 	}
 });
-
-/**
- * Handle incoming connections,
- * other than websockets
- */
-function handler(request, response) {
-	"use strict";
-
-	var filePath = '.' + request.url;
-	
-	if (filePath === './') {
-		filePath = './index.html';
-	}
-		 
-	var extname = path.extname(filePath);
-	var contentType;
-	
-	switch (extname) {
-		case '.js':
-			contentType = 'text/javascript';
-			break;
-		case '.css':
-			contentType = 'text/css';
-			break;
-		case '.jpg':
-			contentType = 'image/jpeg';
-			break;
-		case '.png':
-			contentType = 'image/png';
-			break;
-		default:
-			contentType = 'text/html';
-	}
-	 
-	path.exists(filePath, function(exists) {
-		
-		if (exists) {
-			fs.readFile(filePath, function(error, content) {
-				if (error) {
-					response.writeHead(500);
-					response.end();
-				}
-				else {
-					response.writeHead(200, { 'Content-Type': contentType });
-					response.end(content, 'utf-8');
-				}
-			});
-		}
-		else {
-			fs.readFile(filePath, function (err, data) {
-				if (err) {
-					response.writeHead(500);
-					response.end('Error loading index.html');
-				}
-				response.writeHead(200);
-				response.end(data);
-			});
-		}
-	});
-
-}
