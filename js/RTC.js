@@ -114,7 +114,7 @@
 				});
 				peerConnection.addIceCandidate( candidate );
 			} else if( message.type === "bye" ) {
-				_this.callbacks.onRemoteHangup.call( _this, message );
+				_this.fire("onRemoteHangup", message);
 			}
 		}
 		
@@ -168,9 +168,12 @@
 			console.log( "Remote stream added.", event );
 			
 			_this.remoteStream = event.stream;
-			var remoteUrlStream = window.URL.createObjectURL( _this.remoteStream );
+			_this.remoteStreamUrl = window.URL.createObjectURL( event.stream );
 			
-			_this.callbacks.onReady.call( _this, remoteUrlStream, _this.remoteStream );
+			_this.fire("onReady", {
+				streamUrl: _this.remoteStreamUrl,
+				stream: _this.remoteStream
+			});
 		}
 		
 		/**
@@ -200,26 +203,19 @@
 			console.log( "Remote stream removed.", event );
 		}
 	};
-	
-	RTC.prototype.callbacks = {
-		onRemoteHangup: function(){},
-		onReady: function() {}
-	};
 		
 	/**
 	 * onRemoteHangup fires when the connection is stopped
 	 */
 	RTC.prototype.onRemoteHangup = function( callback ) {
-		this.callbacks.onRemoteHangup = callback;
-		return this;
+		return this.bind( "onRemoteHangup", callback );
 	};
 		
 	/**
 	 * onReady fires when the connection is established
 	 */
 	RTC.prototype.onReady = function( callback ) {
-		this.callbacks.onReady = callback;
-		return this;
+		return this.bind( "onReady", callback );
 	};
 	
 	/**
@@ -244,6 +240,7 @@
 			audioTrack.enabled = ( force !== undefined ) ? force :
 								( ( audioTrack.enabled === true ) ? false : true );
 		}
+		
 		return this;
 	};
 	
@@ -271,7 +268,7 @@
 	 * Once the local stream is established it's URL will be
 	 * accesible through this variable.
 	 */
-	RTC.localUrlStream = undefined;
+	RTC.localStreamUrl = undefined;
 	
 	/**
 	 * room of the client, will be set after connection has been made
@@ -279,9 +276,37 @@
 	 */
 	RTC.roomID = undefined;
 	
-	var callbacks = {
-		onLocalStreamAdded: function() {},
-		onIncoming: function() {}
+	/**
+	 * Experimental, attaching event listeners for callbacks.
+	 * http://www.nczonline.net/blog/2010/03/09/custom-events-in-javascript/
+	 */
+	RTC._listeners = RTC.prototype._listeners = {};
+	
+	RTC.bind = RTC.prototype.bind = function( type, listener ) {
+		if( typeof this._listeners[type] === "undefined" ) {
+			this._listeners[type] = [];
+		}
+		
+		this._listeners[type].push( listener );
+		
+		return this;
+	};
+	
+	RTC.fire = RTC.prototype.fire = function( event, data ) {
+		if( typeof event === "string" ) {
+			event = { type: event };
+		}
+		
+		if( this._listeners[ event.type ] instanceof Array ) {
+			var listeners = this._listeners[ event.type ];
+			
+			for( var i = 0, len = listeners.length; i < len; i++ ) {
+				// if data is not defined pass event first, else pass event as 2nd.
+				listeners[i].call( this, data || event, data && event );
+			}
+		}
+		
+		return this;
 	};
 	
 	/**
@@ -290,13 +315,11 @@
 	 * @return {void}
 	 */
 	RTC.onLocalStreamAdded = function( callback ) {
-		callbacks.onLocalStreamAdded = callback;
-		return this;
+		return this.bind( "onLocalStreamAdded", callback );
 	};
 	
 	RTC.onIncoming = function( callback ) {
-		callbacks.onIncoming = callback;
-		return this;
+		return this.bind( "onIncoming", callback );
 	};
 	
 	/**
@@ -308,7 +331,7 @@
 			// listen for incoming offers and send the offers to the onIncoming callback
 			RTC.socket.on( "Signaling", function( data ) {
 				if( data.type === "offer" ) {
-					callbacks.onIncoming( data );
+					RTC.fire("onIncoming", data);
 				}
 			});
 			RTC.once( "JoinRoom", { roomID: roomID }, function( data ) {
@@ -318,6 +341,8 @@
 				}
 			});		
 		});
+		
+		return this;
 	};
 	
 	/**
@@ -325,8 +350,7 @@
 	 * that it won't collide when called multiple times.
 	 */
 	RTC.getUserList = function( callback ) {
-		RTC.once( "getUserList", callback );
-		return this;
+		return RTC.once( "getUserList", callback );
 	};
 	
 	/**
@@ -348,6 +372,7 @@
 			delete data.uuid;
 			callback( data );
 		});
+		
 		return this;
 	};
 	
@@ -383,9 +408,12 @@
 			console.log("User has granted access to local media.");
 			
 			RTC.localStream = stream;
-			RTC.localUrlStream = window.URL.createObjectURL( stream );
+			RTC.localStreamUrl = window.URL.createObjectURL( stream );
 			
-			callbacks.onLocalStreamAdded( RTC.localUrlStream, RTC.localStream );
+			RTC.fire("onLocalStreamAdded", {
+				streamUrl: RTC.localStreamUrl,
+				stream: RTC.localStream
+			});
 			callback();
 		};
 	}

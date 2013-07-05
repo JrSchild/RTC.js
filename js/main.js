@@ -10,8 +10,8 @@ $(function() {
 			RTC.onIncoming(function( data ) {
 				var chatWindow = openChat( data.sender );
 				connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
-					.onReady(function( stream ) {
-						addVideo( stream, chatWindow.find('.videocall') );
+					.onReady(function( data ) {
+						addVideo( data.streamUrl, chatWindow.find('.videocall') );
 					})
 					.onRemoteHangup( onRemoteHangup );
 			});
@@ -23,8 +23,8 @@ $(function() {
 		var chatWindow = $('#chat-' + clientID);
 		
 		new RTC({ video: true, audio: true },{ client: clientID })
-			.onReady(function( stream ) {
-				addVideo( stream, chatWindow.find('.videocall') );
+			.onReady(function( data ) {
+				addVideo( data.streamUrl, chatWindow.find('.videocall') );
 			})
 			.onRemoteHangup( onRemoteHangup );
 	});
@@ -34,13 +34,15 @@ $(function() {
 		openChat($(this).data('clientID'));
 	});
 	
-	function onLocalStreamAdded( streamUrl, stream ) {
+	function onLocalStreamAdded( data ) {
+		console.log("onLocalStreamAdded", data);
+		
 		var localStream = $('.local-stream');
-		addVideo( streamUrl, localStream );
+		addVideo( data.streamUrl, localStream );
 		localStream.find('video')[0].muted = true;
 	}
 	
-	function onRemoteHangup(args) {
+	function onRemoteHangup( args ) {
 		closeChat( args.sender );
 	}
 	
