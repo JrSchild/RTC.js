@@ -32,7 +32,7 @@ io.of('/' + namespace).on('connection', function (client) {
 	
 	//-- Variables declarations--//
 	var room = '';
-
+	
 	/**
 	 * When the user hangs up
 	 * broadcast bye signal to all users in the room
@@ -90,7 +90,7 @@ io.of('/' + namespace).on('connection', function (client) {
 		}
 		client.emit('Connect' + (message && message.uuid || ''), data);
 	});
-
+	
 	/**
 	 * There always has to be a message.connectionID!
 	 */

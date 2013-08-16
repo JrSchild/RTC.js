@@ -43,7 +43,7 @@
         <div class="header row">
             <div class="profilepic"></div>
             <span class="title"><%=clientID%></span>
-            <span class="call-btn" data-clientID="<%=clientID%>">Videocall</span>
+            <span class="btn btn-success btn-call" data-clientID="<%=clientID%>">Videocall</span>
         </div>
         <div class="body row">
             <div class="videocall"></div>
@@ -51,6 +51,15 @@
     </div>
 </script>
 
+<script type="text/html" id="popup_tmpl">
+    <div class="popup" id="popup-<%=connectionID%>">
+        <span class="popup-title">Incoming call</span>
+        <span class="popup-name"><%=sender%></span>
+        <div>
+            <a href="#" class="btn btn-danger">Decline</a><a href="#" class="btn btn-success" data-connectionID="<%=connectionID%>">Accept</a>
+        </div>
+    </div>
+</script>
         <!-- Call the socket.io Ressources of the server -->
         <script>document.write('<script src="http://' + APP.host + '/socket.io/socket.io.js"><\/script>')</script>
         <script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.2/jquery.min.js"></script>

@@ -1,32 +1,47 @@
 $(function() {
 	var chatWindowTmpl = tmpl('chat_window_tmpl');
+	var popupTmpl = tmpl('popup_tmpl');
+	var offers = {};
+	var connections = [];
 	
 	RTC.socket = io.connect( APP.host + '/' + APP.namespace );
 	RTC.onLocalStreamAdded( onLocalStreamAdded )
 		.join(1, function() {
-			var connections = [];
 			
 			loadClients();
 			RTC.onIncoming(function( data ) {
-				var chatWindow = openChat( data.sender );
-				connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
-					.onReady(function( data ) {
-						addVideo( data.streamUrl, chatWindow.find('.videocall') );
-					})
-					.onRemoteHangup( onRemoteHangup );
+				offers[data.connectionID] = data;
+						
+				$(popupTmpl(data)).appendTo('.container');
 			});
 		});
 	
 	// Apply call handler
-	$('.container').on('click', '.call-btn', function( e ) {
+	$('.container').on('click', '.btn-call', function( e ) {
 		var clientID = $(this).data('clientid');
 		var chatWindow = $('#chat-' + clientID);
 		
 		new RTC({ video: true, audio: true },{ client: clientID })
 			.onReady(function( data ) {
+				connections[ this.connectionID ] = this;
 				addVideo( data.streamUrl, chatWindow.find('.videocall') );
 			})
 			.onRemoteHangup( onRemoteHangup );
+	});
+	
+	$('.container').on('click', '.popup .btn-success', function( e ) {
+		var data = offers[ $(this).data('connectionid') ];
+		
+		if( data ) {
+			var chatWindow = openChat( data.sender );
+			
+			connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
+				.onReady(function( data ) {
+					addVideo( data.streamUrl, chatWindow.find('.videocall') );
+				})
+				.onRemoteHangup( onRemoteHangup );
+		}
+		$('#popup-' + data.connectionID).remove();
 	});
 	
 	// Make the user list dynamic
