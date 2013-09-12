@@ -5,7 +5,8 @@ $(function() {
 	var connections = [];
 	
 	RTC.socket = io.connect( APP.host + '/' + APP.namespace );
-	RTC.onLocalStreamAdded( onLocalStreamAdded )
+	RTC
+		.onLocalStreamAdded( onLocalStreamAdded )
 		.join(1, function() {
 			
 			loadClients();
@@ -16,9 +17,11 @@ $(function() {
 			});
 		});
 	
-	// Apply call handler
-	$('.container').on('click', '.btn-call', function( e ) {
-		var clientID = $(this).data('clientid');
+	/**
+	 * Call the other client.
+	 * @return {void}
+	 */
+	function initiateCall( clientID ) {
 		var chatWindow = $('#chat-' + clientID);
 		
 		new RTC({ video: true, audio: true },{ client: clientID })
@@ -27,40 +30,87 @@ $(function() {
 				addVideo( data.streamUrl, chatWindow.find('.videocall') );
 			})
 			.onRemoteHangup( onRemoteHangup );
-	});
+	}
 	
-	$('.container').on('click', '.popup .btn-success', function( e ) {
-		var data = offers[ $(this).data('connectionid') ];
+	/**
+	 * Answer a call with the received data
+	 * @return {void}
+	 */
+	function answerCall( data ) {
+		var chatWindow = openChat( data.sender );
 		
-		if( data ) {
-			var chatWindow = openChat( data.sender );
+		connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
+			.onReady(function( data ) {
+				addVideo( data.streamUrl, chatWindow.find('.videocall') );
+			})
+			.onRemoteHangup( onRemoteHangup );
+	}
+	
+	// Apply call, answer and hangup handlers.
+	$('.container')
+		.on('click', '.btn-call', function( e ) {
+			var clientID = $(this).data('clientid');
 			
-			connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
-				.onReady(function( data ) {
-					addVideo( data.streamUrl, chatWindow.find('.videocall') );
-				})
-				.onRemoteHangup( onRemoteHangup );
-		}
-		$('#popup-' + data.connectionID).remove();
-	});
+			initiateCall( clientID );
+		})
+		.on('click', '.popup .btn-success', function( e ) {
+			var connectionid = $(this).data('connectionid');
+			
+			// Has the offer been made? If yes, answer the call.
+			var data = offers[ connectionid ];
+			
+			if( data ) {
+				answerCall( data );
+			}
+				
+			// Remove popup from the DOM.
+			$('#popup-' + connectionid).remove();
+		}).on('click', '.popup .btn-danger', function( e ) {
+			var connectionid = $(this).data('connectionid');
+			
+			// API for declining calls hasn't been written yet.
+			// For now we'll just remove the popup.
+			if( connectionid ) {
+				offers[ connectionid ] = null;
+				$('#popup-' + connectionid).remove();
+			}
+		});
 	
 	// Make the user list dynamic
 	$('ul.users').on('click', 'li', function( e ) {
-		openChat($(this).data('clientID'));
+		var clientID = $(this).data('clientID');
+		
+		openChat( clientID );
 	});
 	
+	/**
+	 * When the local stream has been added.
+	 * @return {void}
+	 */
 	function onLocalStreamAdded( data ) {
 		console.log("onLocalStreamAdded", data);
 		
 		var localStream = $('.local-stream');
+		
+		// Add the local videostream to the DOM
 		addVideo( data.streamUrl, localStream );
+		
+		// Mute local audio stream.
 		localStream.find('video')[0].muted = true;
 	}
 	
+	/**
+	 * When the remote streams has been terminated, close the chat.
+	 * @return {void}
+	 */
 	function onRemoteHangup( args ) {
 		closeChat( args.sender );
 	}
 	
+	/**
+	 * Open a chat window based on the clientID.
+	 * @return {$-Object}
+	 */
 	function openChat( clientID ) {
 		// is the chat with this person already in the DOM?
 		var chatwindow = $('#chat-' + clientID);
@@ -82,6 +132,10 @@ $(function() {
 		return chatwindow;
 	}
 	
+	/**
+	 * Close a chat window based on the clientID.
+	 * @return {void}
+	 */
 	function closeChat( clientID ) {
 		$('#chat-' + clientID).remove();
 		
@@ -93,6 +147,10 @@ $(function() {
 		}
 	}
 	
+	/**
+	 * Add a videostream to the DOM.
+	 * @return {void}
+	 */
 	function addVideo( stream, parent ) {
 		$('<video/>')
 			.attr({
@@ -102,14 +160,21 @@ $(function() {
 			.appendTo(parent);
 	}
 	
-	// Let's just use long-polling for now to update the user list.
+	/**
+	 * Keeps updating the user list.
+	 * For now it uses long-polling.
+	 * @return {void}
+	 */
 	function loadClients() {
 		RTC.getUserList(function( clients ) {
 			var users = $('ul.users');
 			var currActive = users.find('.active').first().data('clientid');
 			
+			// clear the user list before re-loading it.
 			users.html('');
 			if( clients[0] ) {
+			
+				// refresh the list.
 				for( var i = 0, y = clients.length; i < y; i++ ) {
 					$('<li/>')
 						.text(clients[i])
@@ -119,10 +184,13 @@ $(function() {
 						})
 						.appendTo(users);
 				}
-				if( currActive )
+				
+				// restore the currently active user.
+				if( currActive ) {
 					users
 						.find('[data-clientid="' + currActive + '"]')
 						.addClass('active');
+				}
 			}
 			setTimeout(loadClients, 2000)
 		});

@@ -67,8 +67,12 @@
 			processSignalingMessage( data );
 		}
 		
+		/** =======================
+		 *  PRIVATE CLASS FUNCTIONS
+		 ** ======================= */
+		
 		/**
-		 * Set parameter for creating a peer connection and add a callback function for messagin by peer connection
+		 * Set parameter for creating a peer connection and add a callback function for messaging by peer connection
 		 * @return {void}
 		 */
 		function createPeerConnection() {
