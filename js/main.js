@@ -2,19 +2,28 @@ $(function() {
 	var chatWindowTmpl = tmpl('chat_window_tmpl');
 	var popupTmpl = tmpl('popup_tmpl');
 	var offers = {};
-	var connections = [];
+	var connections = {};
 	
 	RTC.socket = io.connect( APP.host + '/' + APP.namespace );
+	
+	/**
+	 * RTC init setup.
+	 */
 	RTC
 		.onLocalStreamAdded( onLocalStreamAdded )
+	
+		// Ask media permissions and join the main room on the server.
 		.join(1, function() {
-			
+		
+			// Make the clientlist dynamic.
 			loadClients();
-			RTC.onIncoming(function( data ) {
-				offers[data.connectionID] = data;
-						
-				$(popupTmpl(data)).appendTo('.container');
-			});
+		})
+		
+		// Bind handler on incoming connections.
+		.onIncoming(function( data ) {
+			offers[ data.connectionID ] = data;
+			
+			$(popupTmpl(data)).appendTo('.container');
 		});
 	
 	/**
@@ -24,11 +33,9 @@ $(function() {
 	function initiateCall( clientID ) {
 		var chatWindow = $('#chat-' + clientID);
 		
-		new RTC({ video: true, audio: true },{ client: clientID })
-			.onReady(function( data ) {
-				connections[ this.connectionID ] = this;
-				addVideo( data.streamUrl, chatWindow.find('.videocall') );
-			})
+		// call the client by creating a new RTC object.
+		new RTC({ video: true, audio: true }, { client: clientID })
+			.onReady( onReady( chatWindow ) )
 			.onRemoteHangup( onRemoteHangup );
 	}
 	
@@ -39,10 +46,9 @@ $(function() {
 	function answerCall( data ) {
 		var chatWindow = openChat( data.sender );
 		
-		connections[data.connectionId] = new RTC({ video: true, audio: true }, data)
-			.onReady(function( data ) {
-				addVideo( data.streamUrl, chatWindow.find('.videocall') );
-			})
+		// answer the client and create a new RTC object.
+		new RTC({ video: true, audio: true }, data)
+			.onReady( onReady( chatWindow ) )
 			.onRemoteHangup( onRemoteHangup );
 	}
 	
@@ -97,6 +103,21 @@ $(function() {
 		
 		// Mute local audio stream.
 		localStream.find('video')[0].muted = true;
+	}
+	
+	/**
+	 * Return a function to execute when the connection has been established.
+	 * Store an element to append the video to.
+	 * @return {function}
+	 */
+	function onReady( $el ) {
+		return function( data ) {
+			// Store the RTC object after the connection has been established.
+			connections[ this.connectionID ] = this;
+			
+			// Add video to the DOM
+			addVideo( data.streamUrl, $el.find('.videocall') );
+		}
 	}
 	
 	/**
