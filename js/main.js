@@ -34,7 +34,8 @@ $(function() {
 		var chatWindow = $('#chat-' + clientID);
 		
 		// call the client by creating a new RTC object.
-		new RTC({ video: true, audio: true }, { client: clientID })
+		new RTC({ client: clientID })
+			.call()
 			.onReady( onReady( chatWindow ) )
 			.onRemoteHangup( onRemoteHangup );
 	}
@@ -47,7 +48,8 @@ $(function() {
 		var chatWindow = openChat( data.sender );
 		
 		// answer the client and create a new RTC object.
-		new RTC({ video: true, audio: true }, data)
+		new RTC( data )
+			.call()
 			.onReady( onReady( chatWindow ) )
 			.onRemoteHangup( onRemoteHangup );
 	}
